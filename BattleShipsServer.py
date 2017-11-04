@@ -3,6 +3,7 @@ from random import randint
 import argparse
 import sys
 import threading
+import time
 
 
 parser = argparse.ArgumentParser()
@@ -24,44 +25,61 @@ for row in board1:
   final_board.append(mid_board[0])
   final_board.append(row)
 
-def print_board(board):
-  i =0
-  for row in board:
-    if i%3 == 0:
-      print(' ')
-      print(' '.join(row),end= ' ')
-    else:
-      print(' '.join(row),end= ' ')
-    i +=1
+
 
 
 
 # ------- Server-------
-host  = "127.0.0.1"
+
 port  = 5000
 
 try:
-  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  s.bind((host,port))
-except Exception:
+  serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  serversocket.bind((socket.gethostname(),port))
+  serversocket.listen(3)
+except socket.eror:
 	print("Problem while starting the server")
+  time.sleep(2)
+  quit()
 
 print("Server Started")
 
-connections = []
+
+
+connections = {}
 quitting = False
-
+i = 0
 while not quitting:
-	data, addr = s,revfrom(1024)
-	data = data.decode("utf-8")
+  try:
+    clientsocket,addr = serversocket.accept()
+  except socket.timeout:
+    print("Time out eror")
+  except Exception :
+    print("Eror while connecting to the client")
+ 
+	alias = serversocket.recv(1024) 
+	alias = alias.decode("utf-8")
 	if addr not in connections:
-		connections.append(addr)
-    
-	print("Data from: "+str(addr)+" -->"+str(data))
-	
-	data1,data2 = data.split(" ")
+    if i ==0:
+      user1 = addr
+    elif i == 1:
+      user2 = addr
+    connections[addr] = alias
+    i += 1 
+  elif alias == "Quit":
+    quitting = True
+
+  print("Data from: "+str(addr)+" -->"+str(data))
+	if type(data) == int and len(data)>1:
+    data1,data2 = data.split(" ")
+  else:
+    new_data = "You must enter 2 numbers"
+    serversocket.send(new_data)
+
+  
 
 
 
-	s.sendto(new_status.encode("utf-8"),addr)
+
+	serversocket.send(new_status)
 	
