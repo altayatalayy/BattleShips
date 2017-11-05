@@ -14,14 +14,14 @@ def print_board(board):
 
 
 host = "127.0.0.1"
-port = 0
+port = 5000
 
 
 
 try:
 	clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	clientsocket.setblocking(0)
-	clientsocket.setdefaulttimeout(50)
+	#clientsocket.setblocking(0)
+	#clientsocket.setdefaulttimeout(50)
 	clientsocket.connect((host,port))
 except socket.error:
 	print("Error while creating client-socket")
@@ -32,25 +32,42 @@ except socket.error:
 
 
 
-alias = input("Enter your name: ").strip().lower().capitilaze()
+alias = input("Enter user name: ").strip().lower().capitilaze()
 clientsocket.send(alias)
 
-guess = input("Cordinates --> ").strip()
+guess = input("Cordinates --> ").strip() # with a comma in between.
 
 quitting = False
-while not quitting
+while not quitting:
   if guess != " " and type(guess)==int:
   	clientsocket.send(guess)
+  elif guess == "Quit":
+    print("\nQuiting from server")
+    socket.shutdown()
+    socket.close()
+    time.sleep(2)
+    quit()
+
   else:
   	print("Invalid input")
+    guess = input("Cordinates --> ").strip()
   try:
   	data = clientsocket.recv(1024)
   	data.decode('utf-8')
-  	if type(data) == list:
-  		print_board(data)
+  	if data[:5] == "Board":
+  		print_board(data[5:])
   	else:
-  		print(str(data)
+  		print(str(data))
+  except Exception:
+    print("\nSome really big problem")
 
   guess = input("Cordinates --> ").strip()
+
+
+socket.shutdown()
+print("\nEmergency shut down.")
+socket.close()
+time.sleep(2)
+quit()
 
 
