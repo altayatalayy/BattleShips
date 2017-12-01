@@ -1,5 +1,7 @@
 import socket
 import time
+import pickle
+
 
 def print_board(board):
 	# to print board with data that has came from server, Server will send the current status of board at each turn. 
@@ -7,6 +9,7 @@ def print_board(board):
   for row in board:
     if i%3 == 0:
       print(' ')
+      print('\t\t\t',end = '')
       print(' '.join(row),end= ' ')
     else:
       print(' '.join(row),end= ' ')
@@ -14,59 +17,43 @@ def print_board(board):
 
 
 host = "127.0.0.1"
-port = 5000
+port = 9000
 
 
 
 try:
-	clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	#clientsocket.setblocking(0)
-	#clientsocket.setdefaulttimeout(50)
+	clientsocket = socket.socket()
 	clientsocket.connect((host,port))
-except socket.error:
-	print("Error while creating client-socket")
-	socket.shutdown()
+except Exception as e:
+	print(str(e))
 	socket.close()
 	time.sleep(2)
 	quit()
 
 
 
-alias = input("Enter user name: ").strip().lower().capitilaze()
-clientsocket.send(alias)
+alias = input("Enter user name: ").encode("utf-8")
+guess = input("Cordinates --> ").encode("utf-8") # with a comma in between.
 
-guess = input("Cordinates --> ").strip() # with a comma in between.
 
-quitting = False
-while not quitting:
-  if guess != " " and type(guess)==int:
-  	clientsocket.send(guess)
-  elif guess == "Quit":
-    print("\nQuiting from server")
-    socket.shutdown()
-    socket.close()
-    time.sleep(2)
-    quit()
 
+
+while True:
+  if guess:
+    clientsocket.send(alias+guess)
   else:
-  	print("Invalid input")
-    guess = input("Cordinates --> ").strip()
-  try:
-  	data = clientsocket.recv(1024)
-  	data.decode('utf-8')
-  	if data[:5] == "Board":
-  		print_board(data[5:])
-  	else:
-  		print(str(data))
-  except Exception:
-    print("\nSome really big problem")
+    clientsocket.send("Quit".encode("utf-8"))  
+    break
+  data = pickle.loads(clientsocket.recv(4096),encoding="utf-8")
+  print_board(data)
+  guess = input("\nCordinates --> ").encode("utf-8")
 
-  guess = input("Cordinates --> ").strip()
+     
 
 
-socket.shutdown()
-print("\nEmergency shut down.")
-socket.close()
+
+print("\n\nClosing client socket.\n")
+clientsocket.close()
 time.sleep(2)
 quit()
 
