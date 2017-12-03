@@ -1,6 +1,5 @@
-import sys, getopt, pickle, threading, time, socket
+import sys, getopt, pickle, threading, time, socket, queue, termcolor
 from Ships import warShip # contains ship classes
-
 
 
 #-----------------Intro-----------------
@@ -9,7 +8,7 @@ Bsize = 6
 number_of_turns = 4
 number_of_ships = 1
 host = '127.0.0.1'
-port  = 8000
+port  = 6000
 
 
 def usage():
@@ -33,7 +32,7 @@ def usage():
 
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], "hs:t:n:p:j", ["help","size","turn","number","host","port"])
+  opts, args = getopt.getopt(sys.argv[1:], "hs:t:n:p:j:", ["help","size","turn","number","port","host"])
 except getopt.GetoptError as err:
   print(str(err))
   usage()
@@ -74,10 +73,53 @@ print("board size = "+str(Bsize))
 
 
 # -----------------Thread-----------------
+a = warShip(Bsize)
 
-def clientHandler():
-  pass
+def dataReciever():
+  global new_queue, final_board
+  new_queue = queue.Queue()
+  for client in connections:
+    data = client.recv(4096).decode('utf-8')
+    new_queue.put(data)
+    final_board = clientHandler(a,final_board)
+    
 
+def clientHandler(ship,Board):
+  if not new_queue.empty():
+    data = new_queue.get()
+    
+    if data:
+      cord_x,cord_y = data[7:].split(',')
+    else:
+      closeServer()
+
+    if data[:7] == 'Player1':
+      data1 = (int(cord_x)-1)*3
+      data2 = int(cord_y) - 1
+    elif data[:7] == 'Player2':
+      data1 = int(cord_x)*3-1
+      data2 = int(cord_y) - 1
+    
+    print(data[:7]+' --> '+str(data1)+','+str(data2))
+    
+    if data1 < 0 or data2 < 0 or data1 > Bsize*3 or data2 > Bsize:
+      print(data[:7]+" --> missed the board")
+    elif final_board[data1][data2] == "X":
+      print(data[:7]+" --> guessed already")
+    elif ship.getShot(data1,data2):
+      print(data[:7]+" --> shot the ship")
+      Board[data1][data2] = termcolor.colored('X','green')
+    else:
+      print(data[:7]+" --> missed")
+      Board[data1][data2] = termcolor.colored('X','red')
+    
+    encoded_board = pickle.dumps(Board)
+    for client in connections:
+      client.send(encoded_board)
+    print('Data sent\n\n')
+
+    new_queue.task_done()
+    return Board
 
 # -----------------Server-----------------
 
@@ -99,7 +141,7 @@ def startServer():
   connections = []
   adrress = []
   
-  while len(connections) != 1:
+  while len(connections) != 2:
     try:
       conn,addr = serversocket.accept()	  
     except Exception as e:
@@ -112,58 +154,34 @@ def startServer():
   print('Connections: ')
   for addr in adrress:
 	  print('[*] '+str(addr))
+  print('\n')
+
+
+def closeServer():
+  print("Closing server\n")
+  serversocket.close()
+  time.sleep(1)
+  sys.exit()
 
   
+#-----------------Play Game-----------------
 
 startServer()
-a = warShip(Bsize)
-print(a.getCordinates())
+
+print(a.getCordinates(),'\n')
+
 while True:
- 
-
-  #exec(input("--> "))
-
-  # client_thread = threading.Thread(target = clientHandler,args = (client_socket,))
-  # client_thread.start()
-
-  data = connections[0].recv(4096).decode('utf-8')
-
-  if "Quit" == str(data):
-    break
-  
-  elif data[:7] == "Player1":
-
-    data1,data2 = data[7:].split(",")
-    data1 = (int(data1)-1)*3  # Enter numbers from 1 to Bsize
-    data2 = int(data2) - 1 
-    print("Player1 --> "+str(data1)+" "+str(data2))
-
-    print(a.getShot(data1,data2))
-
-    if data1 < 0 or data2 < 0 or data1 > Bsize*3 or data2 > Bsize:
-      print("Player1 --> missed the board")
-    elif final_board[data1][data2] == "X":
-      print("Player1 --> guessed already")
-    else:
-      print("Player1 --> missed")
-      final_board[data1][data2] = 'X'
-
-  
-  encoded_final_board = pickle.dumps(final_board)
-  for con in connections:
-    con.send(encoded_final_board)
-  print("data sent \n\n")
-  
-
-  	
-
-  
-  			
+  # data_thread = threading.Thread(target = dataReciever,args = (connections,))
 
 
-  
+  # try:
+  #   data_thread.start()
 
-print("Closing server\n")
-serversocket.close()
-time.sleep(1)
-quit()	
+  # except Exception as e:
+  #   print(str(e))
+  #   closeServer()
+
+  dataReciever()
+  #final_board = clientHandler(a,final_board)
+
+

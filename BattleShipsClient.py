@@ -10,7 +10,7 @@ def usage():
  ''')
 
 host = "127.0.0.1"
-port = 9000
+port = 5000
 
 try:
   opts,args = getopt.getopt(sys.argv[1:],"hj:p:",["help","host,""port"])
@@ -44,7 +44,7 @@ def print_board(board):
 
 
 host = "127.0.0.1"
-port = 8000
+port = 6000
 
 
 
@@ -53,8 +53,8 @@ try:
 	clientsocket.connect((host,port))
 except Exception as e:
 	print(str(e))
-	socket.close()
-	time.sleep(2)
+	clientsocket.close()
+	time.sleep(1)
 	quit()
 
 
@@ -69,7 +69,7 @@ while True:
   if guess:
     clientsocket.send(alias+guess)
   else:
-    clientsocket.send("Quit".encode("utf-8"))  
+    clientsocket.send("".encode("utf-8"))  
     break
   data = pickle.loads(clientsocket.recv(4096),encoding="utf-8")
   print_board(data)
@@ -81,7 +81,7 @@ while True:
 
 print("\n\nClosing client socket.\n")
 clientsocket.close()
-time.sleep(1.6)
-quit()
+time.sleep(1)
+sys.exit()
 
 
