@@ -1,5 +1,6 @@
 import sys, getopt, pickle, threading, time, socket
-from random import randint
+from Ships import warShip # contains ship classes
+
 
 
 #-----------------Intro-----------------
@@ -8,7 +9,7 @@ Bsize = 6
 number_of_turns = 4
 number_of_ships = 1
 host = '127.0.0.1'
-port  = 9000
+port  = 8000
 
 
 def usage():
@@ -32,11 +33,12 @@ def usage():
 
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], "hs:t:n:jp", ["help","size","turn","number","host","port"])
+  opts, args = getopt.getopt(sys.argv[1:], "hs:t:n:p:j", ["help","size","turn","number","host","port"])
 except getopt.GetoptError as err:
   print(str(err))
   usage()
   sys.exit()
+
 
 
 for o,a in opts:
@@ -51,7 +53,7 @@ for o,a in opts:
   elif o in ("-j","--host"):
     host = a
   elif o in ("-p","--port"):
-    port = a
+    port = int(a)
   else:
     assert False,"Unhandled Option"
 
@@ -80,15 +82,15 @@ def clientHandler():
 # -----------------Server-----------------
 
 
-def serverLoop():
+def startServer():
   global host, port, serversocket, connections
   
   try:
     serversocket = socket.socket()
     serversocket.bind((host,port))
     serversocket.listen(2)
-  except socket.eror:
-    print("Problem while starting the server")
+  except Exception as e:
+    print(str(e))
     serversocket.close()
     time.sleep(2)
     sys.exit()
@@ -113,9 +115,12 @@ def serverLoop():
 
   
 
-serverLoop()
-
+startServer()
+a = warShip(Bsize)
+print(a.getCordinates())
 while True:
+ 
+
   #exec(input("--> "))
 
   # client_thread = threading.Thread(target = clientHandler,args = (client_socket,))
@@ -126,12 +131,14 @@ while True:
   if "Quit" == str(data):
     break
   
-  if data[:7] == "Player1":
+  elif data[:7] == "Player1":
 
     data1,data2 = data[7:].split(",")
     data1 = (int(data1)-1)*3  # Enter numbers from 1 to Bsize
     data2 = int(data2) - 1 
     print("Player1 --> "+str(data1)+" "+str(data2))
+
+    print(a.getShot(data1,data2))
 
     if data1 < 0 or data2 < 0 or data1 > Bsize*3 or data2 > Bsize:
       print("Player1 --> missed the board")
@@ -140,6 +147,7 @@ while True:
     else:
       print("Player1 --> missed")
       final_board[data1][data2] = 'X'
+
   
   encoded_final_board = pickle.dumps(final_board)
   for con in connections:

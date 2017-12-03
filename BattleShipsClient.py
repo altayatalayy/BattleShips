@@ -1,6 +1,33 @@
-import socket
-import time
-import pickle
+import socket, pickle, time, getopt, sys
+
+def usage():
+  print(''' 
+    -j or --host                    set host
+
+    -p or --port                    set port number
+
+    -h or --help                    to learn the usage
+ ''')
+
+host = "127.0.0.1"
+port = 9000
+
+try:
+  opts,args = getopt.getopt(sys.argv[1:],"hj:p:",["help","host,""port"])
+except getopt.GetoptError as err:
+  print(str(err))
+  usage()
+  sys.exit()
+
+for o,a in opts:
+  if o in ("-h","--help"):
+    usage()
+    sys.exit()
+  elif o in ("-j","--host"):
+    host = int(a)
+  elif o in ("-p","--port"):
+    port = int(a)
+
 
 
 def print_board(board):
@@ -17,7 +44,7 @@ def print_board(board):
 
 
 host = "127.0.0.1"
-port = 9000
+port = 8000
 
 
 
@@ -54,7 +81,7 @@ while True:
 
 print("\n\nClosing client socket.\n")
 clientsocket.close()
-time.sleep(2)
+time.sleep(1.6)
 quit()
 
 
