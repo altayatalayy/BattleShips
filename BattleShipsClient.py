@@ -1,4 +1,5 @@
 import socket, pickle, time, getopt, sys, queue
+from Threads import ClienThread
 
 def usage():
   print(''' 
@@ -52,12 +53,6 @@ except Exception as e:
 	time.sleep(1)
 	quit()
 
-def useQueue(Q):
-  data = pickle.loads(clientsocket.recv(4096),encoding="utf-8")
-  Q.put(data)
-  while not Q.empty():
-    print_board(Q.get())
-
 def getGuess():
   guess = input("Cordinates --> ").encode("utf-8") # with a comma in between.
   return guess
@@ -68,6 +63,8 @@ alias = input("Enter user name: ").encode("utf-8")
 guess = getGuess()
 
 q = queue.Queue()
+clienThread = ClienThread(q,clientsocket,print_board())
+clienThread.start()
 
 while True:
   if guess:
@@ -75,8 +72,7 @@ while True:
   else:
     clientsocket.send("".encode("utf-8"))  
     break
-  useQueue(q)
-  print('\n')
+
   guess = getGuess()
 
      

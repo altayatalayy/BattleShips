@@ -139,7 +139,6 @@ def clientHandler(q,ship,Board):
       data2 = int(cord_y) - 1
     
     print(data[:7]+' --> '+str(data1)+','+str(data2))
-    print(type(Board))
     
     if data1 < 0 or data2 < 0 or data1 > Bsize*3 or data2 > Bsize:
       print(data[:7]+" --> missed the board")
