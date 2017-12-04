@@ -120,12 +120,6 @@ a = warShip(Bsize)
 print(a.getCordinates())
 while True:
  
-
-  #exec(input("--> "))
-
-  # client_thread = threading.Thread(target = clientHandler,args = (client_socket,))
-  # client_thread.start()
-
   data = connections[0].recv(4096).decode('utf-8')
 
   if "Quit" == str(data):

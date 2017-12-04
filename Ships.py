@@ -1,6 +1,5 @@
 from random import randint
 
-
 class warShip():
 	#number_of_ships = 0
 	def __init__(self,board_size,player= 1):

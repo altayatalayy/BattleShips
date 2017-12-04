@@ -78,7 +78,6 @@ while True:
      
 
 
-
 print("\n\nClosing client socket.\n")
 clientsocket.close()
 time.sleep(1.6)
