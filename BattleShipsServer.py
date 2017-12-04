@@ -72,7 +72,7 @@ print("board size = "+str(Bsize))
 
 # -----------------Thread-----------------
 
-def clientHandler(q,ship,Board):
+def clientHandler(q,ship1,ship2,Board):
     data = q.get()
     if data:
         cord_x,cord_y = data[7:].split(',')
@@ -92,7 +92,7 @@ def clientHandler(q,ship,Board):
       print(data[:7]+" --> missed the board")
     elif Board[data1][data2] == "X":
       print(data[:7]+" --> guessed already")
-    elif ship.getShot(data1,data2):
+    elif ship1.getShot(data1,data2) or ship2.getShot(data1,data2):
       print(data[:7]+" --> shot the ship")
       Board[data1][data2] = termcolor.colored('X','green')
     else:
@@ -152,19 +152,17 @@ def closeServer():
 startServer(host,port)
 
 dataThread = DataThread(connections)
-
 dataThread.start()
 q = dataThread.give_queue()
 
 a = warShip(Bsize)
-print(a.getCordinates(),'\n')
 b = warShip(Bsize,player = 2)
+
+print(a.getCordinates()) 
 print(b.getCordinates(),'\n')
 
-serverThread1 = ServerHandler(q,a,final_board,clientHandler)
-serverThread2 = ServerHandler(q,b,final_board,clientHandler)
-
+serverThread1 = ServerHandler(q,a,b,final_board,clientHandler)
 serverThread1.start()
-serverThread2.start()
+
 
 
