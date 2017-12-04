@@ -1,4 +1,4 @@
-import socket, pickle, time, getopt, sys
+import socket, pickle, time, getopt, sys, queue
 
 def usage():
   print(''' 
@@ -10,7 +10,7 @@ def usage():
  ''')
 
 host = "127.0.0.1"
-port = 5000
+port = 8000
 
 try:
   opts,args = getopt.getopt(sys.argv[1:],"hj:p:",["help","host,""port"])
@@ -43,11 +43,6 @@ def print_board(board):
     i +=1
 
 
-host = "127.0.0.1"
-port = 6000
-
-
-
 try:
 	clientsocket = socket.socket()
 	clientsocket.connect((host,port))
@@ -57,13 +52,22 @@ except Exception as e:
 	time.sleep(1)
 	quit()
 
+def useQueue(Q):
+  data = pickle.loads(clientsocket.recv(4096),encoding="utf-8")
+  Q.put(data)
+  while not Q.empty():
+    print_board(Q.get())
+
+def getGuess():
+  guess = input("Cordinates --> ").encode("utf-8") # with a comma in between.
+  return guess
+
 
 
 alias = input("Enter user name: ").encode("utf-8")
-guess = input("Cordinates --> ").encode("utf-8") # with a comma in between.
+guess = getGuess()
 
-
-
+q = queue.Queue()
 
 while True:
   if guess:
@@ -71,9 +75,9 @@ while True:
   else:
     clientsocket.send("".encode("utf-8"))  
     break
-  data = pickle.loads(clientsocket.recv(4096),encoding="utf-8")
-  print_board(data)
-  guess = input("\nCordinates --> ").encode("utf-8")
+  useQueue(q)
+  print('\n')
+  guess = getGuess()
 
      
 
