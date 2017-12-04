@@ -132,10 +132,10 @@ def clientHandler(q,ship,Board):
       closeServer()
 
     if data[:7] == 'Player1':
-      data1 = (int(cord_x)-1)*3
+      data1 = int(cord_x)*3-1
       data2 = int(cord_y) - 1
     elif data[:7] == 'Player2':
-      data1 = int(cord_x)*3-1
+      data1 = (int(cord_x)-1)*3
       data2 = int(cord_y) - 1
     
     print(data[:7]+' --> '+str(data1)+','+str(data2))
