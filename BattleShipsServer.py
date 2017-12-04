@@ -1,6 +1,6 @@
 import sys, getopt, pickle, threading, time, socket, queue, termcolor
 from Ships import warShip # contains ship classes
-from Threads import DataThread
+from Threads import DataThread, ServerHandler
 
 
 #-----------------Intro-----------------
@@ -58,8 +58,6 @@ for o,a in opts:
     assert False,"Unhandled Option"
 
 
-
-
 # -----------------Board-----------------
 
 board1 = [["0"]*Bsize for i in range(Bsize)]
@@ -72,11 +70,45 @@ for row in board1:
 
 print("board size = "+str(Bsize))
 
+# -----------------Thread-----------------
+
+def clientHandler(q,ship,Board):
+    data = q.get()
+    if data:
+        cord_x,cord_y = data[7:].split(',')
+    else:
+        closeServer()
+
+    if data[:7] == 'Player1':
+      data1 = int(cord_x)*3-1
+      data2 = int(cord_y) - 1
+    elif data[:7] == 'Player2':
+      data1 = (int(cord_x)-1)*3
+      data2 = int(cord_y) - 1
+    
+    print(data[:7]+' --> '+str(data1)+','+str(data2))
+    
+    if data1 < 0 or data2 < 0 or data1 > Bsize*3 or data2 > Bsize-1:
+      print(data[:7]+" --> missed the board")
+    elif Board[data1][data2] == "X":
+      print(data[:7]+" --> guessed already")
+    elif ship.getShot(data1,data2):
+      print(data[:7]+" --> shot the ship")
+      Board[data1][data2] = termcolor.colored('X','green')
+    else:
+      print(data[:7]+" --> missed")
+      Board[data1][data2] = termcolor.colored('X','red')
+    
+    encoded_board = pickle.dumps(Board)
+    for client in connections:
+      client.send(encoded_board)
+    print('Data sent\n\n')
+
 # -----------------Server-----------------
 
 
-def startServer():
-  global host, port, serversocket, connections
+def startServer(host, port):
+  global  serversocket, connections
   
   try:
     serversocket = socket.socket()
@@ -113,55 +145,13 @@ def closeServer():
   serversocket.close()
   time.sleep(1)
   sys.exit()
-
-startServer()
-# -----------------Thread-----------------
-
-
-dataThread = DataThread(connections)
-
-
-def clientHandler(q,ship,Board):
-
-  if not q.empty():
-    data = q.get()
-    
-    if data:
-      cord_x,cord_y = data[7:].split(',')
-    else:
-      closeServer()
-
-    if data[:7] == 'Player1':
-      data1 = int(cord_x)*3-1
-      data2 = int(cord_y) - 1
-    elif data[:7] == 'Player2':
-      data1 = (int(cord_x)-1)*3
-      data2 = int(cord_y) - 1
-    
-    print(data[:7]+' --> '+str(data1)+','+str(data2))
-    
-    if data1 < 0 or data2 < 0 or data1 > Bsize*3 or data2 > Bsize-1:
-      print(data[:7]+" --> missed the board")
-    elif Board[data1][data2] == "X":
-      print(data[:7]+" --> guessed already")
-    elif ship.getShot(data1,data2):
-      print(data[:7]+" --> shot the ship")
-      Board[data1][data2] = termcolor.colored('X','green')
-    else:
-      print(data[:7]+" --> missed")
-      Board[data1][data2] = termcolor.colored('X','red')
-    
-    encoded_board = pickle.dumps(Board)
-    for client in connections:
-      client.send(encoded_board)
-    print('Data sent\n\n')
-
-    q.task_done()
-
     
 
 #-----------------Play Game-----------------
 
+startServer(host,port)
+
+dataThread = DataThread(connections)
 
 dataThread.start()
 q = dataThread.give_queue()
@@ -171,10 +161,10 @@ print(a.getCordinates(),'\n')
 b = warShip(Bsize,player = 2)
 print(b.getCordinates(),'\n')
 
+serverThread1 = ServerHandler(q,a,final_board,clientHandler)
+serverThread2 = ServerHandler(q,b,final_board,clientHandler)
 
-while True:
-
-  clientHandler(q,a,final_board)
-  clientHandler(q,b,final_board)
+serverThread1.start()
+serverThread2.start()
 
 

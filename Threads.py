@@ -18,18 +18,40 @@ class DataThread(threading.Thread):
 	def give_queue(self): 
 		return self.q
 
+class ServerHandler(threading.Thread):
+	
+	def __init__(self,Q,Ship,Board,func):
+		threading.Thread.__init__(self)
+		self.Q = Q
+		self.Ship = Ship
+		self.Board = Board
+		self.func = func
+	
+	def run(self):
+		while True:
+			self.func(self.Q,self.Ship,self.Board)
+
+
 class ClienThread(threading.Thread):
 	
 	def __init__(self,Q,client_socket):
 		threading.Thread.__init__(self)
 		self.Q = Q
 		self.client_socket = client_socket
-		#self.board_func = board_func()
 	
 	def run(self):
 		while True:
 			data = pickle.loads(self.client_socket.recv(4096),encoding="utf-8")
 			self.Q.put(data)
-			# while not self.Q.empty():
-			# 	self.board_func(self.Q.get())
-			# 	print('\n')
+
+class ClientPrint(threading.Thread):
+
+	def __init__(self,Q,func):
+		threading.Thread.__init__(self)
+		self.Q = Q
+		self.func = func
+
+	def run(self):
+		while True:
+			data = self.Q.get()
+			self.func(data)

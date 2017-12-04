@@ -1,5 +1,5 @@
 import socket, pickle, time, getopt, sys, queue
-from Threads import ClienThread
+from Threads import ClienThread, ClientPrint
 
 def usage():
   print(''' 
@@ -33,15 +33,17 @@ for o,a in opts:
 
 def print_board(board):
 	# to print board with data that has came from server, Server will send the current status of board at each turn. 
-  i =0
-  for row in board:
-    if i%3 == 0:
-      print(' ')
-      print('\t\t\t',end = '')
-      print(' '.join(row),end= ' ')
-    else:
-      print(' '.join(row),end= ' ')
-    i +=1
+	i =0
+	for row in board:
+		if i%3 == 0:
+			print(' ')
+			print('\t\t\t',end = '')
+			print(' '.join(row),end= ' ')
+		else:
+			print(' '.join(row),end= ' ')
+		i +=1
+	print('\n')
+
 
 
 try:
@@ -64,19 +66,21 @@ guess = getGuess()
 
 q = queue.Queue()
 clienThread = ClienThread(q,clientsocket)
+clientPrint = ClientPrint(q,print_board)
 clienThread.start()
+clientPrint.start()
 
 while True:
-  if guess:
-    clientsocket.send(alias+guess)
-  else:
-    clientsocket.send("".encode("utf-8"))  
-    break
+	
+	if guess:
+		clientsocket.send(alias+guess)
+	else:
+		clientsocket.send("".encode("utf-8"))  
+		break
 
-  while not q.empty():
-    print_board(q.get())
-    print('\n\n')
-  guess = getGuess()
+	guess = getGuess()
+
+  
 
      
 
