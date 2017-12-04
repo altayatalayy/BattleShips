@@ -63,7 +63,7 @@ alias = input("Enter user name: ").encode("utf-8")
 guess = getGuess()
 
 q = queue.Queue()
-clienThread = ClienThread(q,clientsocket,print_board())
+clienThread = ClienThread(q,clientsocket)
 clienThread.start()
 
 while True:
@@ -73,6 +73,9 @@ while True:
     clientsocket.send("".encode("utf-8"))  
     break
 
+  while not q.empty():
+    print_board(q.get())
+    print('\n\n')
   guess = getGuess()
 
      

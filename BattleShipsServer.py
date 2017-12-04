@@ -140,7 +140,7 @@ def clientHandler(q,ship,Board):
     
     print(data[:7]+' --> '+str(data1)+','+str(data2))
     
-    if data1 < 0 or data2 < 0 or data1 > Bsize*3 or data2 > Bsize:
+    if data1 < 0 or data2 < 0 or data1 > Bsize*3 or data2 > Bsize-1:
       print(data[:7]+" --> missed the board")
     elif Board[data1][data2] == "X":
       print(data[:7]+" --> guessed already")

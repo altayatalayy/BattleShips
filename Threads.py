@@ -1,4 +1,4 @@
-import threading, queue, socket
+import threading, queue, socket, pickle
 
 class DataThread(threading.Thread):
 	
@@ -20,16 +20,16 @@ class DataThread(threading.Thread):
 
 class ClienThread(threading.Thread):
 	
-	def __init__(self,Q,client_socket,board_func):
+	def __init__(self,Q,client_socket):
 		threading.Thread.__init__(self)
 		self.Q = Q
 		self.client_socket = client_socket
-		self.board_func = board_func()
+		#self.board_func = board_func()
 	
 	def run(self):
 		while True:
-			data = pickle.loads(client_socket.recv(4096),encoding="utf-8")
+			data = pickle.loads(self.client_socket.recv(4096),encoding="utf-8")
 			self.Q.put(data)
-			while not self.Q.empty():
-				self.board_func(self.Q.get())
-				print('\n')
+			# while not self.Q.empty():
+			# 	self.board_func(self.Q.get())
+			# 	print('\n')
